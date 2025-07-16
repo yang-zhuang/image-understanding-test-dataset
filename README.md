@@ -68,14 +68,24 @@ image-understanding-test-dataset/
 - 设置参数时指定 PDF 文件路径和 `images/` 目录：
   
   ```python
-  extract_images(pdf_path="path/to/your.pdf", images_dir="path/to/images")
+  from extract_images_from_pdf import auto_git_commit_push
+  
+  REPO_PATH = "G:/Code/image-understanding-test-dataset"  # 替换为你的本地仓库路径
+  COMMIT_MESSAGE = "[feat]：完善README.md说明"
+  TARGET_BRANCH = "main"
+  
+  # 执行自动提交
+  auto_git_commit_push(REPO_PATH, COMMIT_MESSAGE, TARGET_BRANCH)
   ```
 
 #### 方式二：直接在本项目中处理 PDF
 
 - 将待处理的 PDF 文件放入 `pdfs/` 目录（如 `pdfs/example1.pdf`）
 - 运行 `scripts/extract_images_from_pdf.py`：
-  - 会自动创建以 PDF 文件名（不含后缀）命名的文件夹（如 `images/example1/`）
+  - 会先检查 `images/` 下是否已有同名文件夹（如 `example1/`）
+    - 如果存在：跳过处理并提示 `Folder already exists: example1`
+    - 如果不存在：创建文件夹并提取图片
+  - 自动创建以 PDF 文件名（不含后缀）命名的文件夹（如 `images/example1/`）
   - 提取图片并保存到该文件夹
   - 为每张图片生成对应的 `metadata_image_X.json` 文件
 
@@ -150,39 +160,6 @@ if __name__ == "__main__":
     pdf_path = "pdfs/example1.pdf"
     images_dir = "images/"
     extract_images(pdf_path, images_dir)
-```
-
----
-
-## 📄 示例脚本 2：自动提交到 GitHub（`scripts/upload_to_github.py`）
-
-```python
-import os
-import git
-from git import Repo
-
-# 配置
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-REPO_URL = f"https://{GITHUB_TOKEN}@github.com/your-username/image-understanding-test-dataset.git"
-LOCAL_REPO_DIR = "image-understanding-test-dataset"
-BRANCH = "main"
-
-# 初始化仓库
-repo = Repo.init(LOCAL_REPO_DIR)
-origin = repo.create_remote("origin", REPO_URL)
-
-# 添加新文件（示例：添加 example1/ 文件夹下的所有文件）
-new_files = [
-    "images/example1/image_0.png",
-    "images/example1/metadata_image_0.json",
-    "images/example1/image_1.png",
-    "images/example1/metadata_image_1.json"
-]
-repo.index.add(new_files)
-repo.index.commit("Auto-commit: Add images from example1.pdf")
-
-# 推送提交
-origin.push(refspec=f"HEAD:{BRANCH}")
 ```
 
 ---
@@ -288,12 +265,10 @@ response = requests.post(
 
 ## ⚠️ 注意事项
 
+- **避免重复处理**：若 `images/` 下已有与 PDF 文件名同名的文件夹，脚本将自动跳过处理
+
 - **文件大小限制**：单个文件不超过 100MB，建议压缩大尺寸图片  
-- **私有仓库访问**：若仓库为私有，需在 URL 中添加 GitHub Token：  
-  
-  ```text
-  https://<token>@raw.githubusercontent.com/your-username/...
-  ```
+- **元数据管理**：每个图片有独立的 `.json` 文件，便于扩展和查询
 
 ---
 
