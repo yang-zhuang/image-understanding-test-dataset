@@ -65,18 +65,6 @@ image-understanding-test-dataset/
 #### 方式一：集成到其他项目中
 
 - 在其他项目中调用 `scripts/extract_images_from_pdf.py`
-- 设置参数时指定 PDF 文件路径和 `images/` 目录：
-  
-  ```python
-  from extract_images_from_pdf import auto_git_commit_push
-  
-  REPO_PATH = "G:/Code/image-understanding-test-dataset"  # 替换为你的本地仓库路径
-  COMMIT_MESSAGE = "[feat]：完善README.md说明"
-  TARGET_BRANCH = "main"
-  
-  # 执行自动提交
-  auto_git_commit_push(REPO_PATH, COMMIT_MESSAGE, TARGET_BRANCH)
-  ```
 
 #### 方式二：直接在本项目中处理 PDF
 
@@ -88,6 +76,15 @@ image-understanding-test-dataset/
   - 自动创建以 PDF 文件名（不含后缀）命名的文件夹（如 `images/example1/`）
   - 提取图片并保存到该文件夹
   - 为每张图片生成对应的 `metadata_image_X.json` 文件
+  - 
+- ```python
+  from extract_images_from_pdf import extract_images
+  
+  # 方式二：本项目中处理 PDF
+  pdf_path = "../datasets/2402.03216v4---M3-Embedding.pdf"
+  images_dir = "../images/"
+  extract_images(pdf_path, images_dir)
+  ```
 
 ---
 
@@ -116,55 +113,18 @@ images/
 
 ---
 
-## 📄 示例脚本 1：从 PDF 提取图片（`scripts/extract_images_from_pdf.py`）
+## ⚙️ 自动提交功能增强
 
 ```python
-import os
-import pdfplumber
-from PIL import Image
-import io
-import json
+from upload_to_github import auto_git_commit_push
 
-def extract_images(pdf_path, images_dir):
-    # 获取 PDF 文件名（不含后缀）
-    pdf_name = os.path.splitext(os.path.basename(pdf_path))[0]
-    output_dir = os.path.join(images_dir, pdf_name)
-    os.makedirs(output_dir, exist_ok=True)
+REPO_PATH = "G:/Code/image-understanding-test-dataset"  # 替换为你的本地仓库路径
+COMMIT_MESSAGE = "[feat]：完善README.md说明"
+TARGET_BRANCH = "main"
 
-    with pdfplumber.open(pdf_path) as pdf:
-        for i, page in enumerate(pdf.pages):
-            images = page.images
-            for j, img in enumerate(images):
-                image_data = img["image"]
-                if image_data:
-                    image = Image.open(io.BytesIO(image_data))
-                    image_path = os.path.join(output_dir, f"image_{i}_{j}.png")
-                    image.save(image_path)
-
-                    # 生成对应元数据文件
-                    metadata = {
-                        "source": pdf_name,
-                        "page": i,
-                        "description": f"Image from page {i} of {pdf_name}"
-                    }
-                    metadata_path = os.path.join(output_dir, f"metadata_image_{i}_{j}.json")
-                    with open(metadata_path, "w", encoding="utf-8") as f:
-                        json.dump(metadata, f, indent=2)
-
-if __name__ == "__main__":
-    # 方式一：集成到其他项目时传入路径
-    # pdf_path = "path/to/your.pdf"
-    # images_dir = "path/to/images"
-
-    # 方式二：本项目中处理 PDF
-    pdf_path = "pdfs/example1.pdf"
-    images_dir = "images/"
-    extract_images(pdf_path, images_dir)
+# 执行自动提交
+auto_git_commit_push(REPO_PATH, COMMIT_MESSAGE, TARGET_BRANCH)
 ```
-
----
-
-## ⚙️ 自动提交功能增强
 
 ### 1. **超时控制**
 
